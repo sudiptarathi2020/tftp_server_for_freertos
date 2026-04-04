@@ -120,3 +120,5 @@
 1551	1637	1775303106047534581	/home/rathi/workspace/tftpd_server/build/bootloader/.bin_timestamp	126575f71496c36b
 1637	1670	1775303106048534404	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	ab3a40bb366c7d2a
 1637	1670	1775303106048534404	/home/rathi/workspace/tftpd_server/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	ab3a40bb366c7d2a
+10	65	1775320579390108632	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	ab3a40bb366c7d2a
+10	65	1775320579390108632	/home/rathi/workspace/tftpd_server/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	ab3a40bb366c7d2a

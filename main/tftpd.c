@@ -258,7 +258,6 @@ static int tftpd_send_window(int idx)
 
     tftpd_make_path(s->filename, fpath, sizeof(fpath));
 
-    /* ── Acquire file-system mutex (replaces enter_filesys(OPEN_READ)) ──── */
     if (xSemaphoreTake(g_tftpd_fs_mutex, pdMS_TO_TICKS(2000)) != pdTRUE) {
         tftpd_send_error(idx, TFTP_ERR_ACCESS,
                 "File system temporarily unavailable");
@@ -272,12 +271,10 @@ static int tftpd_send_window(int idx)
         return -1;
     }
 
-    /* Seek to the window-start position */
     if (s->file_pos_win > 0) {
-        /* replaces file_seek(fp, offset, 0 /SEEK_SET/) */
         if (fseek(fp, (long)s->file_pos_win, SEEK_SET) != 0) {
-            fclose(fp);                 /* replaces file_close(fp) */
-            xSemaphoreGive(tftpd_fs_mutex);
+            fclose(fp);
+            xSemaphoreGive(g_tftpd_fs_mutex);
             tftpd_send_error(idx, TFTP_ERR_UNDEF, "File seek error");
             return -1;
         }
@@ -292,16 +289,10 @@ static int tftpd_send_window(int idx)
         pkt->opcode    = htons(TFTP_OP_DATA);
         pkt->block_num = htons(block);
 
-        /*
-         * replaces: read_len = file_read(fp, buf, blksize)
-         *
-         * fread() returns items read (each 1 byte); ferror() distinguishes
-         * EOF from a real I/O error.
-         */
         read_len = (int)fread(pkt->data, 1, s->blksize, fp);
         if (ferror(fp)) {
             fclose(fp);
-            xSemaphoreGive(tftpd_fs_mutex);
+            xSemaphoreGive(g_tftpd_fs_mutex);
             tftpd_send_error(idx, TFTP_ERR_UNDEF, "File read error");
             return -1;
         }
@@ -311,7 +302,6 @@ static int tftpd_send_window(int idx)
         if (read_len < (int)s->blksize)
             s->is_last = 1;
 
-        /* was: so_sendto(s->sock, pkt_buf, …) */
         sent = sendto(s->sock,
                 pkt_buf,
                 (size_t)(sizeof(tftp_data_t) + read_len),
@@ -319,7 +309,7 @@ static int tftpd_send_window(int idx)
                 (struct sockaddr *)&to, sizeof(to));
         if (sent < 0) {
             fclose(fp);
-            xSemaphoreGive(tftpd_fs_mutex);
+            xSemaphoreGive(g_tftpd_fs_mutex);
             tftpd_send_error(idx, TFTP_ERR_UNDEF, "Network send error");
             return -1;
         }
@@ -327,12 +317,11 @@ static int tftpd_send_window(int idx)
         s->last_sent = block;
     }
 
-    fclose(fp);                         /* replaces file_close(fp) */
-    xSemaphoreGive(tftpd_fs_mutex);     /* replaces exit_filesys(OPEN_READ) */
+    fclose(fp);                      
+    xSemaphoreGive(g_tftpd_fs_mutex); 
 
-    /* Arm the retransmit timer for this window */
-    s->timeout_sec  = tftpd_cfg.timeout;
-    s->retry_remain = (uint8_t)(tftpd_cfg.retry - 1);
+    s->timeout_sec  = g_tftpd_cfg.timeout;
+    s->retry_remain = (uint8_t)(g_tftpd_cfg.retry - 1);
 
     return 0;
 }
