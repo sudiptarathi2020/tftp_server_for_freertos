@@ -1,2 +1,2 @@
-source /home/rathi/workspace/udp_server/build/gdbinit/symbols
-source /home/rathi/workspace/udp_server/build/gdbinit/connect
+source /home/rathi/workspace/tftpd_server/build/gdbinit/symbols
+source /home/rathi/workspace/tftpd_server/build/gdbinit/connect

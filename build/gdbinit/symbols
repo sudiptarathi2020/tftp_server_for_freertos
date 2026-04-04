@@ -18,8 +18,8 @@ end
 
 # Load bootloader symbols
 set confirm off
-    add-symbol-file /home/rathi/workspace/udp_server/build/bootloader/bootloader.elf
+    add-symbol-file /home/rathi/workspace/tftpd_server/build/bootloader/bootloader.elf
 set confirm on
 
 # Load application symbols
-file /home/rathi/workspace/udp_server/build/udp_server.elf
+file /home/rathi/workspace/tftpd_server/build/udp_server.elf

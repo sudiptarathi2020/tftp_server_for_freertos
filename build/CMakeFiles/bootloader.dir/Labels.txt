@@ -1,13 +1,13 @@
 # Target labels
  bootloader
 # Source files and their labels
-/home/rathi/workspace/udp_server/build/CMakeFiles/bootloader
-/home/rathi/workspace/udp_server/build/CMakeFiles/bootloader.rule
-/home/rathi/workspace/udp_server/build/CMakeFiles/bootloader-complete.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
-/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+/home/rathi/workspace/tftpd_server/build/CMakeFiles/bootloader
+/home/rathi/workspace/tftpd_server/build/CMakeFiles/bootloader.rule
+/home/rathi/workspace/tftpd_server/build/CMakeFiles/bootloader-complete.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

@@ -1,4 +1,4 @@
-# Install script for directory: /home/rathi/workspace/udp_server/managed_components/joltwallet__littlefs
+# Install script for directory: /home/rathi/workspace/tftpd_server/managed_components/joltwallet__littlefs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

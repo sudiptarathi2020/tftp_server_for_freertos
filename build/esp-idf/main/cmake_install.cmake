@@ -1,4 +1,4 @@
-# Install script for directory: /home/rathi/workspace/udp_server/main
+# Install script for directory: /home/rathi/workspace/tftpd_server/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

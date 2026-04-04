@@ -10,18 +10,18 @@ if(NOT EXISTS "/home/rathi/.espressif/v5.5.3/esp-idf/components/bootloader/subpr
   file(MAKE_DIRECTORY "/home/rathi/.espressif/v5.5.3/esp-idf/components/bootloader/subproject")
 endif()
 file(MAKE_DIRECTORY
-  "/home/rathi/workspace/udp_server/build/bootloader"
-  "/home/rathi/workspace/udp_server/build/bootloader-prefix"
-  "/home/rathi/workspace/udp_server/build/bootloader-prefix/tmp"
-  "/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp"
-  "/home/rathi/workspace/udp_server/build/bootloader-prefix/src"
-  "/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/rathi/workspace/tftpd_server/build/bootloader"
+  "/home/rathi/workspace/tftpd_server/build/bootloader-prefix"
+  "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/tmp"
+  "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src"
+  "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "/home/rathi/workspace/udp_server/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "/home/rathi/workspace/tftpd_server/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
 endif()
