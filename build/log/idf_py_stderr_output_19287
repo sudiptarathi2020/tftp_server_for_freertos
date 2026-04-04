@@ -1,0 +1,216 @@
+Command: ninja all
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 682, in parse_int
+    return int(v, 0)
+           ^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '1.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 227, in from_csv
+    res.append(PartitionDefinition.from_csv(line, line_no + 1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 459, in from_csv
+    res.size = res.parse_size(fields[4], res.type)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 538, in parse_size
+    return parse_int(strval)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 681, in parse_int
+    return parse_int(v[:-1], keywords) * multiplier
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 685, in parse_int
+    raise InputError('Invalid field value %s' % v)
+gen_esp32part.InputError: Invalid field value 1.5
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 411, in <module>
+    main()
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 380, in main
+    target = ParttoolTarget(**target_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 96, in __init__
+    partition_table, _ = gen.PartitionTable.from_file(f)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 208, in from_file
+    return cls.from_csv(str_data), False
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 229, in from_csv
+    raise InputError(
+gen_esp32part.InputError: Error at line 4: Invalid field value 1.5
+Please check extra_partition_subtypes.inc file in build/config directory
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 682, in parse_int
+    return int(v, 0)
+           ^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '1.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 227, in from_csv
+    res.append(PartitionDefinition.from_csv(line, line_no + 1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 459, in from_csv
+    res.size = res.parse_size(fields[4], res.type)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 538, in parse_size
+    return parse_int(strval)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 681, in parse_int
+    return parse_int(v[:-1], keywords) * multiplier
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 685, in parse_int
+    raise InputError('Invalid field value %s' % v)
+gen_esp32part.InputError: Invalid field value 1.5
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 411, in <module>
+    main()
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 380, in main
+    target = ParttoolTarget(**target_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 96, in __init__
+    partition_table, _ = gen.PartitionTable.from_file(f)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 208, in from_file
+    return cls.from_csv(str_data), False
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 229, in from_csv
+    raise InputError(
+gen_esp32part.InputError: Error at line 4: Invalid field value 1.5
+Please check extra_partition_subtypes.inc file in build/config directory
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 682, in parse_int
+    return int(v, 0)
+           ^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '1.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 227, in from_csv
+    res.append(PartitionDefinition.from_csv(line, line_no + 1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 459, in from_csv
+    res.size = res.parse_size(fields[4], res.type)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 538, in parse_size
+    return parse_int(strval)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 681, in parse_int
+    return parse_int(v[:-1], keywords) * multiplier
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 685, in parse_int
+    raise InputError('Invalid field value %s' % v)
+gen_esp32part.InputError: Invalid field value 1.5
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 411, in <module>
+    main()
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 380, in main
+    target = ParttoolTarget(**target_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 96, in __init__
+    partition_table, _ = gen.PartitionTable.from_file(f)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 208, in from_file
+    return cls.from_csv(str_data), False
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 229, in from_csv
+    raise InputError(
+gen_esp32part.InputError: Error at line 4: Invalid field value 1.5
+Please check extra_partition_subtypes.inc file in build/config directory
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 682, in parse_int
+    return int(v, 0)
+           ^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '1.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 227, in from_csv
+    res.append(PartitionDefinition.from_csv(line, line_no + 1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 459, in from_csv
+    res.size = res.parse_size(fields[4], res.type)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 538, in parse_size
+    return parse_int(strval)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 681, in parse_int
+    return parse_int(v[:-1], keywords) * multiplier
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 685, in parse_int
+    raise InputError('Invalid field value %s' % v)
+gen_esp32part.InputError: Invalid field value 1.5
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 411, in <module>
+    main()
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 380, in main
+    target = ParttoolTarget(**target_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 96, in __init__
+    partition_table, _ = gen.PartitionTable.from_file(f)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 208, in from_file
+    return cls.from_csv(str_data), False
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 229, in from_csv
+    raise InputError(
+gen_esp32part.InputError: Error at line 4: Invalid field value 1.5
+Please check extra_partition_subtypes.inc file in build/config directory
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 682, in parse_int
+    return int(v, 0)
+           ^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '1.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 227, in from_csv
+    res.append(PartitionDefinition.from_csv(line, line_no + 1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 459, in from_csv
+    res.size = res.parse_size(fields[4], res.type)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 538, in parse_size
+    return parse_int(strval)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 681, in parse_int
+    return parse_int(v[:-1], keywords) * multiplier
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 685, in parse_int
+    raise InputError('Invalid field value %s' % v)
+gen_esp32part.InputError: Invalid field value 1.5
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 411, in <module>
+    main()
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 380, in main
+    target = ParttoolTarget(**target_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/parttool.py", line 96, in __init__
+    partition_table, _ = gen.PartitionTable.from_file(f)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 208, in from_file
+    return cls.from_csv(str_data), False
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/gen_esp32part.py", line 229, in from_csv
+    raise InputError(
+gen_esp32part.InputError: Error at line 4: Invalid field value 1.5
+Please check extra_partition_subtypes.inc file in build/config directory

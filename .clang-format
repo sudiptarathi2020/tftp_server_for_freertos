@@ -1,0 +1,42 @@
+BasedOnStyle: Google
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+ColumnLimit: 80
+
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: false
+AlignTrailingComments: true
+
+SortIncludes: true
+IncludeBlocks: Regroup
+
+PointerAlignment: Left
+
+BinPackParameters: false
+BinPackArguments: false
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+AllowAllParametersOfDeclarationOnNextLine: false
+
+IndentCaseLabels: true
+
+IndentPPDirectives: None
+
+NamespaceIndentation: None
+
+Standard: c++17

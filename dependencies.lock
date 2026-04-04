@@ -1,0 +1,27 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 5.5.3
+  joltwallet/littlefs:
+    component_hash: dcea25bcef2de023f089f5f01e8d8c46ad1b8ffef75861ad5ffb4098555839df
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.20.4
+  protocol_examples_common:
+    dependencies: []
+    source:
+      path: /home/rathi/.espressif/v5.5.3/esp-idf/examples/common_components/protocol_examples_common
+      type: local
+    version: '*'
+direct_dependencies:
+- joltwallet/littlefs
+- protocol_examples_common
+manifest_hash: d4f4643135e3f1cee4950a8995a504c015ddef6df5b517aac65fed7351fc8582
+target: esp32
+version: 2.0.0
