@@ -1,0 +1,161 @@
+Command: /home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python /home/rathi/.espressif/v5.5.3/esp-idf/tools/idf_monitor.py -p /dev/ttyUSB0 -b 115200 --toolchain-prefix xtensa-esp32-elf- --target esp32 --revision 0 /home/rathi/workspace/tftpd_server/build/udp_server.elf /home/rathi/workspace/tftpd_server/build/bootloader/bootloader.elf -m '/home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python' '/home/rathi/.espressif/v5.5.3/esp-idf/tools/idf.py' '-p' '/dev/ttyUSB0'
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:6280
+load:0x40078000,len:15864
+load:0x40080400,len:3920
+entry 0x40080644
+[0;32mI (27) boot: ESP-IDF v5.5.3-dirty 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Apr  4 2026 17:45:05[0m
+[0;32mI (27) boot: Multicore bootloader[0m
+[0;32mI (29) boot: chip revision: v3.1[0m
+[0;32mI (32) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (36) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (39) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (43) boot: Enabling RNG early entropy source...[0m
+[0;32mI (47) boot: Partition Table:[0m
+[0;32mI (50) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (63) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (69) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (76) boot:  3 storage          Unknown data     01 82 00110000 00100000[0m
+[0;32mI (82) boot: End of partition table[0m
+[0;32mI (86) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1b180h (110976) map[0m
+[0;32mI (131) esp_image: segment 1: paddr=0002b1a8 vaddr=3ffb0000 size=043d8h ( 17368) load[0m
+[0;32mI (138) esp_image: segment 2: paddr=0002f588 vaddr=40080000 size=00a90h (  2704) load[0m
+[0;32mI (139) esp_image: segment 3: paddr=00030020 vaddr=400d0020 size=8c6e4h (575204) map[0m
+[0;32mI (339) esp_image: segment 4: paddr=000bc70c vaddr=40080a90 size=17568h ( 95592) load[0m
+[0;32mI (376) esp_image: segment 5: paddr=000d3c7c vaddr=50000000 size=00020h (    32) load[0m
+[0;32mI (388) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (389) boot: Disabling RNG early entropy source...[0m
+[0;32mI (399) cpu_start: Multicore app[0m
+[0;32mI (407) cpu_start: GPIO 3 and 1 are used as console UART I/O pins[0m
+[0;32mI (408) cpu_start: Pro cpu start user code[0m
+[0;32mI (408) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (409) app_init: Application information:[0m
+[0;32mI (413) app_init: Project name:     udp_server[0m
+[0;32mI (417) app_init: App version:      1acbebc-dirty[0m
+[0;32mI (422) app_init: Compile time:     Apr  5 2026 18:32:58[0m
+[0;32mI (427) app_init: ELF file SHA256:  a899c916e...[0m
+[0;32mI (431) app_init: ESP-IDF:          v5.5.3-dirty[0m
+[0;32mI (436) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (439) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (443) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (447) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (454) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (459) heap_init: At 3FFB8AC0 len 00027540 (157 KiB): DRAM[0m
+[0;32mI (464) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (469) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (475) heap_init: At 40098000 len 00008000 (32 KiB): IRAM[0m
+[0;33mW (481) spi_flash: Detected boya flash chip but using generic driver. For optimal functionality, enable `SPI_FLASH_SUPPORT_BOYA_CHIP` in menuconfig[0m
+[0;32mI (493) spi_flash: detected chip: generic[0m
+[0;32mI (497) spi_flash: flash io: dio[0m
+[0;32mI (501) main_task: Started on CPU0[0m
+[0;32mI (511) main_task: Calling app_main()[0m
+[0;32mI (521) example_connect: Start example_connect.[0m
+[0;32mI (531) wifi:wifi driver task: 3ffc05c0, prio:23, stack:6656, core=0[0m
+[0;32mI (531) wifi:wifi firmware version: 4df78f2[0m
+[0;32mI (531) wifi:wifi certification version: v7.0[0m
+[0;32mI (531) wifi:config NVS flash: enabled[0m
+[0;32mI (531) wifi:config nano formatting: disabled[0m
+[0;32mI (541) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (541) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (551) wifi:Init management short buffer num: 32[0m
+[0;32mI (551) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (551) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (561) wifi:Init static rx buffer num: 10[0m
+[0;32mI (561) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (571) wifi_init: rx ba win: 6[0m
+[0;32mI (571) wifi_init: accept mbox: 6[0m
+[0;32mI (571) wifi_init: tcpip mbox: 32[0m
+[0;32mI (581) wifi_init: udp mbox: 6[0m
+[0;32mI (581) wifi_init: tcp mbox: 6[0m
+[0;32mI (581) wifi_init: tcp tx win: 5760[0m
+[0;32mI (581) wifi_init: tcp rx win: 5760[0m
+[0;32mI (591) wifi_init: tcp mss: 1440[0m
+[0;32mI (591) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (591) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (601) phy_init: phy_version 4863,a3a4459,Oct 28 2025,14:30:06[0m
+[0;32mI (691) wifi:mode : sta (b0:cb:d8:cf:b2:40)[0m
+[0;32mI (691) wifi:enable tsf[0m
+[0;32mI (691) example_connect: Connecting to Xiaomi 12S Pro...[0m
+[0;33mW (691) wifi:Password length matches WPA2 standards, authmode threshold changes from OPEN to WPA2[0m
+[0;32mI (701) example_connect: Waiting for IP(s)[0m
+[0;32mI (3361) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (3361) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (4361) wifi:state: auth -> init (0x200)[0m
+[0;32mI (4371) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (4371) example_connect: Wi-Fi disconnected 2, trying to reconnect...[0m
+[0;32mI (6791) example_connect: Wi-Fi disconnected 205, trying to reconnect...[0m
+[0;32mI (9201) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (9201) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (9211) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (9241) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (9261) wifi:connected with Xiaomi 12S Pro, aid = 4, channel 1, BW20, bssid = 76:8b:75:13:02:a8[0m
+[0;32mI (9271) wifi:security: WPA2-PSK, phy: bgn, rssi: -44[0m
+[0;32mI (9271) wifi:pm start, type: 1[0m
+
+[0;32mI (9271) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (9281) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (9291) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (9311) wifi:<ba-add>idx:0 (ifx:0, 76:8b:75:13:02:a8), tid:0, ssn:0, winSize:64[0m
+[0;32mI (10331) esp_netif_handlers: example_netif_sta ip: 192.168.130.20, mask: 255.255.255.0, gw: 192.168.130.243[0m
+[0;32mI (10331) example_connect: Got IPv4 event: Interface "example_netif_sta" address: 192.168.130.20[0m
+[0;32mI (10521) example_connect: Got IPv6 event: Interface "example_netif_sta" address: fe80:0000:0000:0000:b2cb:d8ff:fecf:b240, type: ESP_IP6_ADDR_IS_LINK_LOCAL[0m
+[0;32mI (10521) example_common: Connected to example_netif_sta[0m
+[0;32mI (10531) example_common: - IPv4 address: 192.168.130.20,[0m
+[0;32mI (10531) example_common: - IPv6 address: fe80:0000:0000:0000:b2cb:d8ff:fecf:b240, type: ESP_IP6_ADDR_IS_LINK_LOCAL[0m
+[0;32mI (10541) udp_server: Initializing LittleFS[0m
+[0;32mI (10551) udp_server: Partition size: total: 1048576, used: 8192[0m
+[0;32mI (10551) tftpd_task: TFTPDT started, opening listen socket on port 69[0m
+[0;32mI (10561) tftpd: Listen socket open on UDP port 69 (fd=54)[0m
+[0;32mI (10561) tftpd_task: TFTPDT task created — listening on port 69[0m
+[0;32mI (10571) main_task: Returned from app_main()[0m
+[0;32mI (21261) tftpd: RRQ session[0] client=192.168.130.97:47395 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (21301) tftpd: session[0] RRQ complete[0m
+[0;32mI (31091) tftpd: RRQ session[0] client=192.168.130.97:34917 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (31291) tftpd: session[0] RRQ complete[0m
+[0;32mI (32541) tftpd: RRQ session[0] client=192.168.130.97:45048 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (32931) tftpd: session[0] RRQ complete[0m
+[0;32mI (33761) tftpd: RRQ session[0] client=192.168.130.97:40800 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (33951) tftpd: session[0] RRQ complete[0m
+[0;32mI (34781) tftpd: RRQ session[0] client=192.168.130.97:45393 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (34981) tftpd: session[0] RRQ complete[0m
+[0;32mI (35911) tftpd: RRQ session[0] client=192.168.130.97:48002 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (36211) tftpd: session[0] RRQ complete[0m
+[0;32mI (36821) tftpd: RRQ session[0] client=192.168.130.97:57118 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (36831) tftpd: session[0] RRQ complete[0m
+[0;32mI (38571) tftpd: RRQ session[0] client=192.168.130.97:42206 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (38871) tftpd: session[0] RRQ complete[0m
+[0;32mI (39901) tftpd: RRQ session[0] client=192.168.130.97:34706 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (40101) tftpd: session[0] RRQ complete[0m
+[0;32mI (41331) tftpd: RRQ session[0] client=192.168.130.97:39550 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (41341) tftpd: session[0] RRQ complete[0m
+[0;32mI (42771) tftpd: RRQ session[0] client=192.168.130.97:51767 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (42771) tftpd: session[0] RRQ complete[0m
+[0;32mI (43791) tftpd: RRQ session[0] client=192.168.130.97:39093 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (43991) tftpd: session[0] RRQ complete[0m
+[0;32mI (44811) tftpd: RRQ session[0] client=192.168.130.97:41968 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (45221) tftpd: session[0] RRQ complete[0m
+[0;32mI (45841) tftpd: RRQ session[0] client=192.168.130.97:44743 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (46041) tftpd: session[0] RRQ complete[0m
+[0;32mI (46661) tftpd: RRQ session[0] client=192.168.130.97:46189 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (46671) tftpd: session[0] RRQ complete[0m
+[0;32mI (48601) tftpd: RRQ session[0] client=192.168.130.97:58002 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (48901) tftpd: session[0] RRQ complete[0m
+[0;32mI (49631) tftpd: RRQ session[0] client=192.168.130.97:56321 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (49931) tftpd: session[0] RRQ complete[0m
+[0;32mI (50551) tftpd: RRQ session[0] client=192.168.130.97:47308 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (50561) tftpd: session[0] RRQ complete[0m
+[0;32mI (51581) tftpd: RRQ session[0] client=192.168.130.97:57801 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (51771) tftpd: session[0] RRQ complete[0m
+[0;32mI (52601) tftpd: RRQ session[0] client=192.168.130.97:51943 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (52801) tftpd: session[0] RRQ complete[0m
+[0;32mI (53831) tftpd: RRQ session[0] client=192.168.130.97:48663 file=test.txt blksize=512 winsz=1[0m
+[0;32mI (53881) tftpd: session[0] RRQ complete[0m
+[0;32mI (124271) tftpd: WRQ session[0] client=192.168.130.97:40306 file=test1.txt blksize=512 winsz=1[0m
+[0;32mI (124491) tftpd: session[0] WRQ complete[0m

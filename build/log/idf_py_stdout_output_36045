@@ -1,0 +1,74 @@
+Command: ninja flash
+[1/5] cd /home/rathi/workspace/tftpd_server/build/esp-idf/esptool_py && /home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python /home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/rathi/workspace/tftpd_server/build/partition_table/partition-table.bin /home/rathi/workspace/tftpd_server/build/udp_server.bin
+udp_server.bin binary size 0xc3ca0 bytes. Smallest app partition is 0x100000 bytes. 0x3c360 bytes (24%) free.
+[2/5] Performing build step for 'bootloader'
+[1/1] cd /home/rathi/workspace/tftpd_server/build/bootloader/esp-idf/esptool_py && /home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python /home/rathi/.espressif/v5.5.3/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 /home/rathi/workspace/tftpd_server/build/bootloader/bootloader.bin
+Bootloader binary size 0x6630 bytes. 0x9d0 bytes (9%) free.
+[3/5] No install step for 'bootloader'
+[4/5] Completed 'bootloader'
+[4/5] cd /home/rathi/.espressif/v5.5.3/esp-idf/components/esptool_py && /home/rathi/.espressif/tools/cmake/3.30.2/bin/cmake -D IDF_PATH=/home/rathi/.espressif/v5.5.3/esp-idf -D "SERIAL_TOOL=/home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python;;/home/rathi/.espressif/v5.5.3/esp-idf/components/esptool_py/esptool/esptool.py;--chip;esp32" -D "SERIAL_TOOL_ARGS=--before=default_reset;--after=hard_reset;write_flash;@flash_args" -D WORKING_DIRECTORY=/home/rathi/workspace/tftpd_server/build -P /home/rathi/.espressif/v5.5.3/esp-idf/components/esptool_py/run_serial_tool.cmake
+esptool.py --chip esp32 -p /dev/ttyUSB0 -b 460800 --before=default_reset --after=hard_reset write_flash --flash_mode dio --flash_freq 40m --flash_size 4MB 0x1000 bootloader/bootloader.bin 0x10000 udp_server.bin 0x8000 partition_table/partition-table.bin
+esptool.py v4.12.dev1
+Serial port /dev/ttyUSB0
+Connecting....
+Chip is ESP32-D0WD-V3 (revision v3.1)
+Features: WiFi, BT, Dual Core, 240MHz, VRef calibration in efuse, Coding Scheme None
+Crystal is 40MHz
+MAC: b0:cb:d8:cf:b2:40
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00001000 to 0x00007fff...
+Flash will be erased from 0x00010000 to 0x000d3fff...
+Flash will be erased from 0x00008000 to 0x00008fff...
+SHA digest in image updated
+Compressed 26160 bytes to 16526...
+Writing at 0x00001000... (50 %)
+Writing at 0x00007569... (100 %)
+Wrote 26160 bytes (16526 compressed) at 0x00001000 in 0.7 seconds (effective 290.2 kbit/s)...
+Hash of data verified.
+Compressed 801952 bytes to 509418...
+Writing at 0x00010000... (3 %)
+Writing at 0x0001c954... (6 %)
+Writing at 0x00025536... (9 %)
+Writing at 0x00030835... (12 %)
+Writing at 0x0003625d... (15 %)
+Writing at 0x0003c259... (18 %)
+Writing at 0x000416fc... (21 %)
+Writing at 0x00046d47... (25 %)
+Writing at 0x0004c78d... (28 %)
+Writing at 0x0005254d... (31 %)
+Writing at 0x0005818a... (34 %)
+Writing at 0x0005dfea... (37 %)
+Writing at 0x00063ff5... (40 %)
+Writing at 0x0006a372... (43 %)
+Writing at 0x0006fa88... (46 %)
+Writing at 0x00074e25... (50 %)
+Writing at 0x0007ab13... (53 %)
+Writing at 0x00080652... (56 %)
+Writing at 0x00085e47... (59 %)
+Writing at 0x0008b568... (62 %)
+Writing at 0x00091298... (65 %)
+Writing at 0x00096d2e... (68 %)
+Writing at 0x0009c95c... (71 %)
+Writing at 0x000a26a0... (75 %)
+Writing at 0x000a7fdb... (78 %)
+Writing at 0x000ae469... (81 %)
+Writing at 0x000b6765... (84 %)
+Writing at 0x000bc3b1... (87 %)
+Writing at 0x000c2081... (90 %)
+Writing at 0x000c8108... (93 %)
+Writing at 0x000cd911... (96 %)
+Writing at 0x000d3160... (100 %)
+Wrote 801952 bytes (509418 compressed) at 0x00010000 in 11.8 seconds (effective 543.3 kbit/s)...
+Hash of data verified.
+Compressed 3072 bytes to 117...
+Writing at 0x00008000... (100 %)
+Wrote 3072 bytes (117 compressed) at 0x00008000 in 0.1 seconds (effective 478.9 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...
