@@ -1,6 +1,0 @@
-Command: /home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python /home/rathi/.espressif/v5.5.3/esp-idf/tools/idf_monitor.py -p /dev/ttyUSB0 -b 115200 --toolchain-prefix xtensa-esp32-elf- --target esp32 --revision 0 /home/rathi/workspace/tftpd_server/build/udp_server.elf /home/rathi/workspace/tftpd_server/build/bootloader/bootloader.elf -m '/home/rathi/.espressif/python_env/idf5.5_py3.12_env/bin/python' '/home/rathi/.espressif/v5.5.3/esp-idf/tools/idf.py' '-p' '/dev/ttyUSB0'
-[0;33m--- esp-idf-monitor 1.9.0 on /dev/ttyUSB0 115200[0m
-[0;33m--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H[0m
-[0m--- 0x40080400: [0;33m_invalid_pc_placeholder[0m[0m at [0;32m/home/rathi/.espressif/v5.5.3/esp-idf/components/xtensa/xtensa_vectors.S[0m[0m:[1;31m2235[0m
-[0m--- 0x40080644: [0;33mcall_start_cpu0[0m[0m at [0;32m/home/rathi/.espressif/v5.5.3/esp-idf/components/bootloader/subproject/main/bootloader_start.c[0m[0m:[1;31m27[0m
-[0m
