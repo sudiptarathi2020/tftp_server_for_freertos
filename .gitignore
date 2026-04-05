@@ -53,3 +53,26 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Build artifacts
+/build/
+/bin/
+/Debug/
+/Release/
+/*.elf
+/*.hex
+/*.bin
+
+# IDE files (examples)
+*.vscode/
+*.idea/
+*.launch
+*.cproject
+*.project
+
+# Temporary files
+*.o
+*.obj
+*.tmp
+*.log
+*.swp
