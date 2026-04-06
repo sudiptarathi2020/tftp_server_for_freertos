@@ -120,6 +120,18 @@ typedef struct {
     /* WRQ fields */
     uint16_t expected_block;
     uint8_t  file_created;
+    /*
+     * last_ack_sent: the block number of the most recent ACK actually
+     * transmitted to the client.
+     *
+     * With windowsize == 1 this equals expected_block - 1 at all times.
+     * With windowsize > 1 the server only ACKs at window boundaries (RFC 7440
+     * §3), so expected_block - 1 can be mid-window and was never ACKed.
+     * The retransmit path in tftpd_handle_timer must re-send the last ACK
+     * that was truly sent — not an un-ACKed mid-window block number, which
+     * would incorrectly advance the client's send pointer.
+     */
+    uint16_t last_ack_sent;
 
     /*
      * Direction flag: 0 = RRQ (server sends), 1 = WRQ (client sends).
