@@ -43,19 +43,19 @@ static const char *TAG = "tftpd";
 static int  tftpd_alloc_session(int is_write);
 static int  tftpd_open_session_sock(void);                      /* FIX-2 */
 static int  tftpd_build_oack(char *buf, size_t buf_size,        /* FIX-3 */
-                              uint16_t blksize, uint8_t winsz);
+        uint16_t blksize, uint8_t winsz);
 static void tftpd_send_error(int idx, uint16_t code, const char *msg);
 static void tftpd_send_error_to(int sock, struct sockaddr_in *to,
-                                 uint16_t code, const char *msg);
+        uint16_t code, const char *msg);
 static int  tftpd_send_ack(int idx, uint16_t block);
 static int  tftpd_parse_request(const char *buf, int len,
-                                 char *filename, uint16_t *blksize,
-                                 uint8_t *winsz, int *has_opts);
+        char *filename, uint16_t *blksize,
+        uint8_t *winsz, int *has_opts);
 static int  tftpd_make_path(const char *filename,               /* FIX-9 */
-                             char *out, size_t out_size);
+        char *out, size_t out_size);
 static int  tftpd_send_window(int idx);
 static void tftpd_process_wrq_data(int idx,                     /* FIX-8 */
-                                    const char *buf, ssize_t len);
+        const char *buf, ssize_t len);
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * RESOURCE MANAGEMENT
@@ -82,7 +82,7 @@ int tftpd_open_listen(uint16_t port)
 
     if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         ESP_LOGE(TAG, "bind() on port %u failed: %s",           /* FIX-1 */
-                 (unsigned)port, strerror(errno));
+                (unsigned)port, strerror(errno));
         close(sock);
         return -1;
     }
@@ -188,9 +188,27 @@ void tftpd_close_session(int idx)
             g_tftpd_num_write--;
     }
 
-    /* FIX-10: close the persistent file handle if it is still open */
+    /*
+     * FIX-10 / BUG FIX: close the persistent FILE* under the FS mutex.
+     *
+     * The original code called fclose() without holding g_tftpd_fs_mutex.
+     * fclose() flushes buffered data and updates LittleFS internal metadata,
+     * which is NOT thread-safe if another task is concurrently calling fopen,
+     * fread, or fwrite on the same LittleFS volume.  Always take the mutex
+     * before touching LittleFS state — even for teardown paths.
+     *
+     * If the mutex cannot be acquired within 500 ms (which should never
+     * happen in normal operation), fall back to an unprotected fclose so
+     * the file handle is not leaked.
+     */
     if (s->fp != NULL) {
-        fclose(s->fp);
+        if (xSemaphoreTake(g_tftpd_fs_mutex, pdMS_TO_TICKS(500)) == pdTRUE) {
+            fclose(s->fp);
+            xSemaphoreGive(g_tftpd_fs_mutex);
+        } else {
+            ESP_LOGW("tftpd", "close_session: mutex timeout — fclose without lock");
+            fclose(s->fp);
+        }
         s->fp = NULL;
     }
 
@@ -234,7 +252,7 @@ static int tftpd_make_path(const char *filename, char *out, size_t out_size)
     /* Reject any path that still contains ".." after stripping */
     if (strstr(filename, "..") != NULL) {
         ESP_LOGW(TAG, "tftpd_make_path: rejected path-traversal attempt: %s",
-                 filename);
+                filename);
         return -1;
     }
 
@@ -256,7 +274,7 @@ static int tftpd_make_path(const char *filename, char *out, size_t out_size)
  * Returns total packet length on success, -1 if the buffer is too small.
  */
 static int tftpd_build_oack(char *buf, size_t buf_size,
-                             uint16_t blksize, uint8_t winsz)
+        uint16_t blksize, uint8_t winsz)
 {
     tftp_oack_t *pkt = (tftp_oack_t *)buf;
     char        *p   = (char *)pkt->opts;
@@ -294,7 +312,7 @@ static int tftpd_build_oack(char *buf, size_t buf_size,
  * FIX-6: check sendto return value and log on failure.
  */
 static void tftpd_send_error_to(int sock, struct sockaddr_in *to,
-                                 uint16_t code, const char *msg)
+        uint16_t code, const char *msg)
 {
     char          buf[80];
     tftp_error_t *pkt  = (tftp_error_t *)buf;
@@ -315,10 +333,10 @@ static void tftpd_send_error_to(int sock, struct sockaddr_in *to,
 
     pkt_len = (ssize_t)(sizeof(tftp_error_t) + mlen + 1);
     sent = sendto(sock, buf, (size_t)pkt_len, 0,
-                  (struct sockaddr *)to, sizeof(*to));
+            (struct sockaddr *)to, sizeof(*to));
     if (sent != pkt_len)                                        /* FIX-6 */
         ESP_LOGW(TAG, "send_error_to: sendto sent=%zd expected=%zd errno=%d",
-                 sent, pkt_len, errno);
+                sent, pkt_len, errno);
 }
 
 static void tftpd_send_error(int idx, uint16_t code, const char *msg)
@@ -360,10 +378,10 @@ static int tftpd_send_ack(int idx, uint16_t block)
     to.sin_port        = s->client_port;
 
     sent = sendto(s->sock, &pkt, sizeof(pkt), 0,
-                  (struct sockaddr *)&to, sizeof(to));
+            (struct sockaddr *)&to, sizeof(to));
     if (sent != (ssize_t)sizeof(pkt)) {                         /* FIX-6 */
         ESP_LOGW(TAG, "send_ack: sendto sent=%zd expected=%zu errno=%d",
-                 sent, sizeof(pkt), errno);
+                sent, sizeof(pkt), errno);
         return -1;
     }
     return 0;
@@ -375,8 +393,8 @@ static int tftpd_send_ack(int idx, uint16_t block)
  * Returns 0 on success, -1 on malformed packet.
  */
 static int tftpd_parse_request(const char *buf, int len,
-                                char *filename, uint16_t *blksize,
-                                uint8_t *winsz, int *has_opts)
+        char *filename, uint16_t *blksize,
+        uint8_t *winsz, int *has_opts)
 {
     const char *p         = buf + 2;    /* skip opcode */
     int         remaining = len - 2;
@@ -392,7 +410,7 @@ static int tftpd_parse_request(const char *buf, int len,
     /* Filename */
     field_len = strnlen(p, remaining);
     if (field_len == (size_t)remaining || field_len == 0 ||
-        field_len >= TFTPD_MAX_FILENAME)
+            field_len >= TFTPD_MAX_FILENAME)
         return -1;
 
     memcpy(filename, p, field_len);
@@ -431,13 +449,13 @@ static int tftpd_parse_request(const char *buf, int len,
         if (strcasecmp(opt_str, "blksize") == 0) {
             if (val >= 8) {
                 *blksize  = (uint16_t)(val > TFTPD_MAX_BLKSIZE
-                                       ? TFTPD_MAX_BLKSIZE : val);
+                        ? TFTPD_MAX_BLKSIZE : val);
                 *has_opts = 1;
             }
         } else if (strcasecmp(opt_str, "windowsize") == 0) {
             if (val >= 1) {
                 *winsz    = (uint8_t)(val > TFTPD_MAX_WINSZ
-                                      ? TFTPD_MAX_WINSZ : val);
+                        ? TFTPD_MAX_WINSZ : val);
                 *has_opts = 1;
             }
         }
@@ -481,7 +499,7 @@ static int tftpd_send_window(int idx)
     /* Acquire FS mutex before touching s->fp */
     if (xSemaphoreTake(g_tftpd_fs_mutex, pdMS_TO_TICKS(2000)) != pdTRUE) {
         tftpd_send_error(idx, TFTP_ERR_ACCESS,
-                         "File system temporarily unavailable");
+                "File system temporarily unavailable");
         return -1;
     }
 
@@ -532,10 +550,10 @@ static int tftpd_send_window(int idx)
 
         expected = (ssize_t)(sizeof(tftp_data_t) + read_len);
         sent = sendto(s->sock, pkt_buf, (size_t)expected, 0,
-                      (struct sockaddr *)&to, sizeof(to));
+                (struct sockaddr *)&to, sizeof(to));
         if (sent != expected) {                                 /* FIX-6 */
             ESP_LOGE(TAG, "session[%d] sendto sent=%zd expected=%zd errno=%d",
-                     idx, sent, expected, errno);
+                    idx, sent, expected, errno);
             xSemaphoreGive(g_tftpd_fs_mutex);
             tftpd_send_error(idx, TFTP_ERR_UNDEF, "Network send error");
             return -1;
@@ -598,7 +616,7 @@ static void tftpd_process_wrq_data(int idx, const char *buf, ssize_t len)
     /* Acquire FS mutex before touching s->fp */
     if (xSemaphoreTake(g_tftpd_fs_mutex, pdMS_TO_TICKS(2000)) != pdTRUE) {
         tftpd_send_error(idx, TFTP_ERR_ACCESS,
-                         "File system temporarily unavailable");
+                "File system temporarily unavailable");
         return;
     }
 
@@ -626,7 +644,7 @@ static void tftpd_process_wrq_data(int idx, const char *buf, ssize_t len)
         size_t written = fwrite(data_ptr, 1, (size_t)write_len, s->fp);
         if (written != (size_t)write_len) {                     /* FIX-6 */
             ESP_LOGE(TAG, "fwrite: wrote %zu of %d bytes: %s",
-                     written, write_len, strerror(errno));
+                    written, write_len, strerror(errno));
             xSemaphoreGive(g_tftpd_fs_mutex);
             tftpd_send_error(idx, TFTP_ERR_DISKFULL, "File write failed");
             return;
@@ -675,7 +693,7 @@ void tftpd_handle_listen_pkt(void)
     struct sockaddr_in to;
 
     len = recvfrom(g_tftpd_listen_sock, buf, sizeof(buf), 0,
-                   (struct sockaddr *)&cli_addr, &cli_len);
+            (struct sockaddr *)&cli_addr, &cli_len);
     if (len < 4)    /* minimum viable RRQ/WRQ is opcode(2)+filename(1)+NUL(1) */
         return;
 
@@ -687,17 +705,17 @@ void tftpd_handle_listen_pkt(void)
 
     if (opcode != TFTP_OP_RRQ && opcode != TFTP_OP_WRQ) {
         tftpd_send_error_to(g_tftpd_listen_sock, &cli_addr,
-                            TFTP_ERR_ILLEGAL,
-                            "Only RRQ/WRQ allowed on this port");
+                TFTP_ERR_ILLEGAL,
+                "Only RRQ/WRQ allowed on this port");
         return;
     }
 
     is_write = (opcode == TFTP_OP_WRQ) ? 1 : 0;
 
     if (tftpd_parse_request(buf, (int)len, filename,
-                             &blksize, &winsz, &has_opts) != 0) {
+                &blksize, &winsz, &has_opts) != 0) {
         tftpd_send_error_to(g_tftpd_listen_sock, &cli_addr,
-                            TFTP_ERR_ILLEGAL, "Malformed request");
+                TFTP_ERR_ILLEGAL, "Malformed request");
         return;
     }
 
@@ -714,14 +732,14 @@ void tftpd_handle_listen_pkt(void)
             reason = "Max concurrent read sessions reached";
         }
         tftpd_send_error_to(g_tftpd_listen_sock, &cli_addr,
-                            TFTP_ERR_UNDEF, reason);
+                TFTP_ERR_UNDEF, reason);
         return;
     }
 
     sock = tftpd_open_session_sock();
     if (sock < 0) {
         tftpd_send_error_to(g_tftpd_listen_sock, &cli_addr,
-                            TFTP_ERR_UNDEF, "No socket resources");
+                TFTP_ERR_UNDEF, "No socket resources");
         return;
     }
 
@@ -754,10 +772,10 @@ void tftpd_handle_listen_pkt(void)
 
         if (has_opts) {
             oack_len = tftpd_build_oack(oack_buf, sizeof(oack_buf),
-                                         blksize, winsz);            /* FIX-3 */
+                    blksize, winsz);            /* FIX-3 */
             if (oack_len > 0) {
                 ssize_t sent = sendto(s->sock, oack_buf, (size_t)oack_len,
-                                      0, (struct sockaddr *)&to, sizeof(to));
+                        0, (struct sockaddr *)&to, sizeof(to));
                 if (sent != (ssize_t)oack_len)                       /* FIX-6 */
                     ESP_LOGW(TAG, "OACK sendto partial: sent=%zd", sent);
             }
@@ -769,9 +787,9 @@ void tftpd_handle_listen_pkt(void)
         }
 
         ESP_LOGI(TAG, "RRQ session[%d] client=%s:%u file=%s blksize=%u winsz=%u",
-                 idx, inet_ntoa(cli_addr.sin_addr),
-                 (unsigned)ntohs(cli_addr.sin_port),
-                 filename, (unsigned)blksize, (unsigned)winsz);
+                idx, inet_ntoa(cli_addr.sin_addr),
+                (unsigned)ntohs(cli_addr.sin_port),
+                filename, (unsigned)blksize, (unsigned)winsz);
 
     } else {
         /* ── WRQ: client sends file ────────────────────────────────── */
@@ -780,10 +798,10 @@ void tftpd_handle_listen_pkt(void)
 
         if (has_opts) {
             oack_len = tftpd_build_oack(oack_buf, sizeof(oack_buf),
-                                         blksize, winsz);            /* FIX-3 */
+                    blksize, winsz);            /* FIX-3 */
             if (oack_len > 0) {
                 ssize_t sent = sendto(s->sock, oack_buf, (size_t)oack_len,
-                                      0, (struct sockaddr *)&to, sizeof(to));
+                        0, (struct sockaddr *)&to, sizeof(to));
                 if (sent != (ssize_t)oack_len)                       /* FIX-6 */
                     ESP_LOGW(TAG, "OACK sendto partial: sent=%zd", sent);
             }
@@ -794,9 +812,9 @@ void tftpd_handle_listen_pkt(void)
         }
 
         ESP_LOGI(TAG, "WRQ session[%d] client=%s:%u file=%s blksize=%u winsz=%u",
-                 idx, inet_ntoa(cli_addr.sin_addr),
-                 (unsigned)ntohs(cli_addr.sin_port),
-                 filename, (unsigned)blksize, (unsigned)winsz);
+                idx, inet_ntoa(cli_addr.sin_addr),
+                (unsigned)ntohs(cli_addr.sin_port),
+                filename, (unsigned)blksize, (unsigned)winsz);
     }
 }
 
@@ -817,7 +835,7 @@ void tftpd_handle_session_pkt(int idx)
     uint16_t           opcode, block;
 
     len = recvfrom(s->sock, buf, sizeof(buf), 0,
-                   (struct sockaddr *)&cli_addr, &from_len);
+            (struct sockaddr *)&cli_addr, &from_len);
 
     /* FIX-7: need at least the 2-byte opcode */
     if (len < 2)
@@ -825,9 +843,9 @@ void tftpd_handle_session_pkt(int idx)
 
     /* TID validation (RFC 1350 §4) */
     if (cli_addr.sin_addr.s_addr != s->client_ip ||
-        cli_addr.sin_port        != s->client_port) {
+            cli_addr.sin_port        != s->client_port) {
         tftpd_send_error_to(s->sock, &cli_addr,
-                            TFTP_ERR_BADTID, "Unknown transfer ID");
+                TFTP_ERR_BADTID, "Unknown transfer ID");
         return;
     }
 
@@ -842,7 +860,7 @@ void tftpd_handle_session_pkt(int idx)
     /* DALLY: re-send last ACK if client retransmits the final DATA */
     if (s->state == TFTPD_STATE_DALLY) {
         if (opcode == TFTP_OP_DATA &&
-            len >= (ssize_t)sizeof(tftp_data_t)) {              /* FIX-7 */
+                len >= (ssize_t)sizeof(tftp_data_t)) {              /* FIX-7 */
             block = ntohs(((const tftp_data_t *)buf)->block_num);
             if (block == (uint16_t)(s->expected_block - 1))
                 tftpd_send_ack(idx, block);
@@ -852,68 +870,68 @@ void tftpd_handle_session_pkt(int idx)
 
     switch (s->state) {
 
-    case TFTPD_STATE_OACK_RRQ:
-        if (opcode != TFTP_OP_ACK) break;
-        /* FIX-7: ACK packet must be at least 4 bytes */
-        if (len < (ssize_t)sizeof(tftp_ack_t)) break;
-        block = ntohs(((const tftp_ack_t *)buf)->block_num);
-        if (block != 0) break;
-        s->state = TFTPD_STATE_RRQ;
-        tftpd_send_window(idx);
-        break;
+        case TFTPD_STATE_OACK_RRQ:
+            if (opcode != TFTP_OP_ACK) break;
+            /* FIX-7: ACK packet must be at least 4 bytes */
+            if (len < (ssize_t)sizeof(tftp_ack_t)) break;
+            block = ntohs(((const tftp_ack_t *)buf)->block_num);
+            if (block != 0) break;
+            s->state = TFTPD_STATE_RRQ;
+            tftpd_send_window(idx);
+            break;
 
-    case TFTPD_STATE_RRQ:
-        if (opcode != TFTP_OP_ACK) break;
-        /* FIX-7 */
-        if (len < (ssize_t)sizeof(tftp_ack_t)) break;
-        block = ntohs(((const tftp_ack_t *)buf)->block_num);
+        case TFTPD_STATE_RRQ:
+            if (opcode != TFTP_OP_ACK) break;
+            /* FIX-7 */
+            if (len < (ssize_t)sizeof(tftp_ack_t)) break;
+            block = ntohs(((const tftp_ack_t *)buf)->block_num);
 
-        /* Ignore stale duplicates from before the current window */
-        if (block < (uint16_t)(s->window_start - 1)) break;
+            /* Ignore stale duplicates from before the current window */
+            if (block < (uint16_t)(s->window_start - 1)) break;
 
-        s->timeout_sec  = g_tftpd_cfg.timeout;
-        s->retry_remain = (uint8_t)(g_tftpd_cfg.retry - 1);
+            s->timeout_sec  = g_tftpd_cfg.timeout;
+            s->retry_remain = (uint8_t)(g_tftpd_cfg.retry - 1);
 
-        if (block == s->last_sent) {
-            if (s->is_last) {
-                ESP_LOGI(TAG, "session[%d] RRQ complete", idx);
-                tftpd_close_session(idx);
-                return;
+            if (block == s->last_sent) {
+                if (s->is_last) {
+                    ESP_LOGI(TAG, "session[%d] RRQ complete", idx);
+                    tftpd_close_session(idx);
+                    return;
+                }
+                s->last_ack      = block;
+                s->file_pos_win += s->bytes_this_win;
+                s->window_start  = (uint16_t)(block + 1);
+                tftpd_send_window(idx);
+            } else if (block >= s->window_start && block < s->last_sent) {
+                /* Partial ACK: retransmit from next unACKed block */
+                uint16_t acked = (uint16_t)(block - (s->window_start - 1));
+                s->file_pos_win += (uint32_t)acked * s->blksize;
+                s->window_start  = (uint16_t)(block + 1);
+                s->last_ack      = block;
+                tftpd_send_window(idx);
             }
-            s->last_ack      = block;
-            s->file_pos_win += s->bytes_this_win;
-            s->window_start  = (uint16_t)(block + 1);
-            tftpd_send_window(idx);
-        } else if (block >= s->window_start && block < s->last_sent) {
-            /* Partial ACK: retransmit from next unACKed block */
-            uint16_t acked = (uint16_t)(block - (s->window_start - 1));
-            s->file_pos_win += (uint32_t)acked * s->blksize;
-            s->window_start  = (uint16_t)(block + 1);
-            s->last_ack      = block;
-            tftpd_send_window(idx);
-        }
-        break;
+            break;
 
-    case TFTPD_STATE_OACK_WRQ:
-        /*
-         * FIX-8: was an implicit fallthrough into TFTPD_STATE_WRQ.
-         * Now explicitly validated here, then delegates to the shared helper.
-         */
-        if (opcode != TFTP_OP_DATA) break;
-        if (len < (ssize_t)sizeof(tftp_data_t)) break;          /* FIX-7 */
-        block = ntohs(((const tftp_data_t *)buf)->block_num);
-        if (block != 1) break;          /* must be the first block */
-        s->state = TFTPD_STATE_WRQ;     /* advance state before processing */
-        tftpd_process_wrq_data(idx, buf, len);
-        break;
+        case TFTPD_STATE_OACK_WRQ:
+            /*
+             * FIX-8: was an implicit fallthrough into TFTPD_STATE_WRQ.
+             * Now explicitly validated here, then delegates to the shared helper.
+             */
+            if (opcode != TFTP_OP_DATA) break;
+            if (len < (ssize_t)sizeof(tftp_data_t)) break;          /* FIX-7 */
+            block = ntohs(((const tftp_data_t *)buf)->block_num);
+            if (block != 1) break;          /* must be the first block */
+            s->state = TFTPD_STATE_WRQ;     /* advance state before processing */
+            tftpd_process_wrq_data(idx, buf, len);
+            break;
 
-    case TFTPD_STATE_WRQ:
-        if (opcode != TFTP_OP_DATA) break;
-        tftpd_process_wrq_data(idx, buf, len);
-        break;
+        case TFTPD_STATE_WRQ:
+            if (opcode != TFTP_OP_DATA) break;
+            tftpd_process_wrq_data(idx, buf, len);
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 }
 
@@ -954,7 +972,7 @@ void tftpd_handle_timer(void)
         s->timeout_sec = g_tftpd_cfg.timeout;
 
         ESP_LOGD(TAG, "session[%d] retransmit (retries_left=%u)",
-                 i, (unsigned)s->retry_remain);
+                i, (unsigned)s->retry_remain);
 
         memset(&to, 0, sizeof(to));
         to.sin_family      = AF_INET;
@@ -962,28 +980,28 @@ void tftpd_handle_timer(void)
         to.sin_port        = s->client_port;
 
         switch (s->state) {
-        case TFTPD_STATE_OACK_RRQ:
-        case TFTPD_STATE_OACK_WRQ:
-            oack_len = tftpd_build_oack(oack_buf, sizeof(oack_buf),    /* FIX-3 */
-                                         s->blksize, s->windowsize);
-            if (oack_len > 0) {
-                ssize_t sent = sendto(s->sock, oack_buf, (size_t)oack_len,
-                                      0, (struct sockaddr *)&to, sizeof(to));
-                if (sent != (ssize_t)oack_len)                         /* FIX-6 */
-                    ESP_LOGW(TAG, "OACK retransmit sendto partial=%zd", sent);
-            }
-            break;
+            case TFTPD_STATE_OACK_RRQ:
+            case TFTPD_STATE_OACK_WRQ:
+                oack_len = tftpd_build_oack(oack_buf, sizeof(oack_buf),    /* FIX-3 */
+                        s->blksize, s->windowsize);
+                if (oack_len > 0) {
+                    ssize_t sent = sendto(s->sock, oack_buf, (size_t)oack_len,
+                            0, (struct sockaddr *)&to, sizeof(to));
+                    if (sent != (ssize_t)oack_len)                         /* FIX-6 */
+                        ESP_LOGW(TAG, "OACK retransmit sendto partial=%zd", sent);
+                }
+                break;
 
-        case TFTPD_STATE_RRQ:
-            tftpd_send_window(i);
-            break;
+            case TFTPD_STATE_RRQ:
+                tftpd_send_window(i);
+                break;
 
-        case TFTPD_STATE_WRQ:
-            tftpd_send_ack(i, (uint16_t)(s->expected_block - 1));
-            break;
+            case TFTPD_STATE_WRQ:
+                tftpd_send_ack(i, (uint16_t)(s->expected_block - 1));
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
 }

@@ -8,6 +8,21 @@
  *     defined in the same translation unit; no prior declaration needed).
  *   - Removed duplicate #include <string.h>.
  *   - tftpd_main_task made static (not called from outside this file).
+ *
+ * BUG FIX — Timer starvation:
+ *   Previously tftpd_handle_timer() was called ONLY when select() returned 0
+ *   (i.e. a full 1-second idle period with no incoming packets).  During an
+ *   active WRQ the client sends DATA packets continuously, so select() never
+ *   times out, tftpd_handle_timer() is never called, and the DALLY countdown
+ *   never advances — the write session stays locked indefinitely.  When the
+ *   client finally stops sending, the server's retry/timeout machinery then
+ *   burns the full (retry × timeout) = 3 × 3 = 9 s before logging
+ *   "transfer timeout" and releasing the session.
+ *
+ *   Fix: use esp_timer_get_time() to track wall-clock elapsed time.
+ *   tftpd_handle_timer() is now called once per second regardless of socket
+ *   activity, ensuring DALLY expiry and retransmit timeouts work correctly
+ *   even while data is flowing.
  */
 
 #include <errno.h>      /* errno, EINTR                                      */
@@ -21,6 +36,7 @@
 #include <sys/socket.h>
 
 #include "esp_log.h"
+#include "esp_timer.h"  /* esp_timer_get_time() — monotonic µs since boot   */
 
 #include "tftpd.h"
 
@@ -87,15 +103,23 @@ void tftpd_init(void)
  *
  * select()-based main loop:
  *   - Multiplexes the listen socket and all active session sockets.
- *   - 1-second timeout drives retransmit / dally countdowns via
- *     tftpd_handle_timer() (replaces the hardware periodic timer from the
- *     original BDCOM design).
+ *   - Wall-clock 1-second tick (via esp_timer_get_time) drives retransmit /
+ *     dally countdowns via tftpd_handle_timer().  The tick fires every second
+ *     regardless of whether select() returned a timeout or active socket(s),
+ *     which was the root cause of the "WRQ hangs for many seconds" bug.
  * ═══════════════════════════════════════════════════════════════════════════*/
 static void tftpd_main_task(void *param)
 {
     fd_set         rdset;
     struct timeval tv;
     int            maxfd, nready, i;
+
+    /*
+     * Wall-clock reference for the 1-second timer tick.
+     * esp_timer_get_time() returns monotonic microseconds since boot;
+     * it is not affected by SNTP or settimeofday().
+     */
+    int64_t last_timer_us = esp_timer_get_time();
 
     ESP_LOGI(TAG, "TFTPDT started, opening listen socket on port %u",
              (unsigned)g_tftpd_cfg.port);
@@ -130,16 +154,44 @@ static void tftpd_main_task(void *param)
             ESP_LOGW(TAG, "No open sockets; retrying listen open in 1 s");
             vTaskDelay(pdMS_TO_TICKS(1000));
             tftpd_handle_timer();
+            last_timer_us = esp_timer_get_time();
             if (g_tftpd_listen_sock < 0)
                 tftpd_open_listen(g_tftpd_cfg.port);
             continue;
         }
 
-        /* ── 1-second timeout drives retransmit / dally timers ─────────── */
-        tv.tv_sec  = 1;
-        tv.tv_usec = 0;
+        /*
+         * Cap the select() timeout at the remaining time until the next
+         * 1-second timer tick so we never overshoot by more than one
+         * scheduler quantum.
+         */
+        {
+            int64_t now_us    = esp_timer_get_time();
+            int64_t remain_us = 1000000LL - (now_us - last_timer_us);
+            if (remain_us <= 0) remain_us = 1;   /* don't block if overdue */
+            tv.tv_sec  = (long)(remain_us / 1000000LL);
+            tv.tv_usec = (long)(remain_us % 1000000LL);
+        }
 
         nready = select(maxfd + 1, &rdset, NULL, NULL, &tv);
+
+        /*
+         * ── Wall-clock 1-second timer tick ──────────────────────────────
+         *
+         * FIX: call tftpd_handle_timer() based on elapsed real time, NOT
+         * only when select() returns 0.  When packets arrive continuously
+         * (active WRQ, client retransmitting in DALLY, etc.) select() never
+         * times out, so the old code starved the timer: DALLY never expired,
+         * g_tftpd_num_write stayed at 1, and new sessions were blocked until
+         * the client's own timeout (potentially 9 s) caused it to give up.
+         */
+        {
+            int64_t now_us = esp_timer_get_time();
+            if (now_us - last_timer_us >= 1000000LL) {
+                tftpd_handle_timer();
+                last_timer_us = now_us;
+            }
+        }
 
         if (nready < 0) {
             if (errno != EINTR)   /* EINTR is benign; all others are real */
@@ -148,11 +200,8 @@ static void tftpd_main_task(void *param)
             continue;
         }
 
-        /* ── Timeout ────────────────────────────────────────────────────── */
-        if (nready == 0) {
-            tftpd_handle_timer();
-            continue;
-        }
+        if (nready == 0)
+            continue;   /* pure timeout — timer already handled above */
 
         /* ── Listen socket: new RRQ or WRQ ─────────────────────────────── */
         if (g_tftpd_listen_sock >= 0 &&
