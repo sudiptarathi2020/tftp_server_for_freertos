@@ -2,30 +2,33 @@
  * tftpd_task.c  —  TFTP Server: Task Entry and Initialization
  *                   ESP-IDF / FreeRTOS
  *
- * Changes:
- *   - Added missing #include <errno.h> (errno used in select() error path).
- *   - Removed redundant forward declarations (tftpd_init / tftpd_main_task
- *     defined in the same translation unit; no prior declaration needed).
- *   - Removed duplicate #include <string.h>.
- *   - tftpd_main_task made static (not called from outside this file).
+ * Ported from the BDCOM/VxWorks version.  All BDCOM platform APIs
+ * (taskSpawn, sys_msgq_*, sys_add_timer, TIMER_MSG_METHOD, socket_register,
+ * syslog) replaced with FreeRTOS / ESP-IDF equivalents.
  *
- * BUG FIX — Timer starvation:
- *   Previously tftpd_handle_timer() was called ONLY when select() returned 0
- *   (i.e. a full 1-second idle period with no incoming packets).  During an
- *   active WRQ the client sends DATA packets continuously, so select() never
- *   times out, tftpd_handle_timer() is never called, and the DALLY countdown
- *   never advances — the write session stays locked indefinitely.  When the
- *   client finally stops sending, the server's retry/timeout machinery then
- *   burns the full (retry × timeout) = 3 × 3 = 9 s before logging
- *   "transfer timeout" and releasing the session.
+ * PORT-A  taskSpawn → xTaskCreate.
+ * PORT-B  sys_msgq_create / sys_msgq_receive / TIMER_MSG_METHOD removed.
+ *         Replaced with a select()-based main loop and an
+ *         esp_timer_get_time() wall-clock tick for the 1-second timer.
+ * PORT-C  socket_register() removed — not present in lwIP / ESP-IDF.
+ *         The select() fd_set covers all open sockets instead.
+ * PORT-D  syslog() → ESP_LOG* macros.
+ * PORT-E  sys_add_timer / sys_start_timer removed.  The repeating 1-second
+ *         tick is emulated by comparing esp_timer_get_time() against a
+ *         stored baseline in each select() iteration.
+ * PORT-F  tftpd_cfg.enabled defaults to 1 (auto-start); in the BDCOM
+ *         version it started disabled and was enabled via CLI.
+ * PORT-G  Show-running / CLI / version registration removed; not applicable
+ *         to ESP-IDF.  Use the ESP-IDF console component if a CLI is needed.
  *
- *   Fix: use esp_timer_get_time() to track wall-clock elapsed time.
- *   tftpd_handle_timer() is now called once per second regardless of socket
- *   activity, ensuring DALLY expiry and retransmit timeouts work correctly
- *   even while data is flowing.
+ * Timer-starvation fix (carried over from previous ESP-IDF revision):
+ *   tftpd_handle_timer() is called based on wall-clock elapsed time, not
+ *   only on select() timeout.  When DATA packets arrive continuously during
+ *   a WRQ, select() never times out, so the old code never called the timer,
+ *   DALLY never expired, and g_tftpd_num_write stayed at 1 forever.
  */
 
-#include <errno.h>      /* errno, EINTR                                      */
+#include <errno.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -43,14 +46,13 @@
 static const char *TAG = "tftpd_task";
 
 /* ── Module globals (extern-declared in tftpd.h) ───────────────────────── */
-tftpd_config_t   g_tftpd_cfg;
-tftpd_session_t  g_tftpd_sessions[TFTPD_MAX_SESSIONS];
-int              g_tftpd_listen_sock = -1;
-uint8_t          g_tftpd_num_read    = 0;
-uint8_t          g_tftpd_num_write   = 0;
-SemaphoreHandle_t g_tftpd_fs_mutex   = NULL;
+tftpd_config_t    g_tftpd_cfg;
+tftpd_session_t   g_tftpd_sessions[TFTPD_MAX_SESSIONS];
+int               g_tftpd_listen_sock = -1;
+uint8_t           g_tftpd_num_read    = 0;
+uint8_t           g_tftpd_num_write   = 0;
+SemaphoreHandle_t g_tftpd_fs_mutex    = NULL;
 
-/* ── Static task (not part of the public API) ───────────────────────────── */
 static void tftpd_main_task(void *param);
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -62,7 +64,7 @@ void tftpd_init(void)
 
     /* 1. Configuration defaults */
     memset(&g_tftpd_cfg, 0, sizeof(g_tftpd_cfg));
-    g_tftpd_cfg.enabled = 1;
+    g_tftpd_cfg.enabled = 1;                /* PORT-F: auto-start             */
     g_tftpd_cfg.port    = TFTPD_DEFAULT_PORT;
     g_tftpd_cfg.timeout = TFTPD_DEFAULT_TIMEOUT;
     g_tftpd_cfg.retry   = TFTPD_DEFAULT_RETRY;
@@ -70,43 +72,57 @@ void tftpd_init(void)
     /* 2. Session array */
     memset(g_tftpd_sessions, 0, sizeof(g_tftpd_sessions));
     for (i = 0; i < TFTPD_MAX_SESSIONS; i++) {
-        g_tftpd_sessions[i].sock = -1;
-        g_tftpd_sessions[i].fp   = NULL;
+        g_tftpd_sessions[i].sock      = -1;
+        g_tftpd_sessions[i].fp        = NULL;
+        g_tftpd_sessions[i].write_buf = NULL;
     }
 
     g_tftpd_listen_sock = -1;
     g_tftpd_num_read    = 0;
     g_tftpd_num_write   = 0;
 
-    /* 3. File-system mutex */
+    /* 3. LittleFS mutex (PORT-8 in tftpd.h) */
     g_tftpd_fs_mutex = xSemaphoreCreateMutex();
     if (g_tftpd_fs_mutex == NULL) {
         ESP_LOGE(TAG, "xSemaphoreCreateMutex failed — aborting init");
         return;
     }
 
-    /* 4. Spawn the TFTPDT task
-     *    Stack: 8192 words ≈ 32 KiB (matches original design).
-     *    Priority 5 is reasonable for a network I/O task on ESP-IDF.
+    /*
+     * 4. Spawn the TFTPDT task.                                           PORT-A
+     *
+     * Stack: 8192 words (~32 KB).  Priority 5 suits a network I/O task.
+     * No message queue or timer handle needed — the task uses select() and
+     * esp_timer_get_time() internally.                                    PORT-B
      */
     BaseType_t rv = xTaskCreate(tftpd_main_task, "TFTPDT",
                                 8192, NULL, 5, NULL);
     if (rv != pdPASS)
         ESP_LOGE(TAG, "xTaskCreate(TFTPDT) failed");
     else
-        ESP_LOGI(TAG, "TFTPDT task created — listening on port %u",
-                 (unsigned)g_tftpd_cfg.port);
+        ESP_LOGI(TAG, "TFTPDT task created — port %u  blksize %u  winsz %u",
+                 (unsigned)g_tftpd_cfg.port,
+                 (unsigned)TFTPD_DEFAULT_BLKSIZE,
+                 (unsigned)TFTPD_DEFAULT_WINSZ);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * tftpd_main_task
  *
- * select()-based main loop:
- *   - Multiplexes the listen socket and all active session sockets.
- *   - Wall-clock 1-second tick (via esp_timer_get_time) drives retransmit /
- *     dally countdowns via tftpd_handle_timer().  The tick fires every second
- *     regardless of whether select() returned a timeout or active socket(s),
- *     which was the root cause of the "WRQ hangs for many seconds" bug.
+ * Replaces tftpd_main_process() from the BDCOM version.            PORT-B/C
+ *
+ * Architecture difference:
+ *   BDCOM: message-queue driven.  A socket_register() callback posts a
+ *          message to the queue; a TIMER_MSG_METHOD timer posts tick messages.
+ *          tftpd_main_process() blocks on sys_msgq_receive() and switches
+ *          on msg_buf[3].
+ *
+ *   ESP-IDF: select()-based.  All open sockets are multiplexed through a
+ *            single select() call with a sub-second timeout.  The 1-second
+ *            timer tick is emulated with esp_timer_get_time() so it fires
+ *            exactly once per second regardless of socket activity — this
+ *            fixes the DALLY-starvation bug that existed when the tick was
+ *            tied only to the select() timeout.
  * ═══════════════════════════════════════════════════════════════════════════*/
 static void tftpd_main_task(void *param)
 {
@@ -115,13 +131,12 @@ static void tftpd_main_task(void *param)
     int            maxfd, nready, i;
 
     /*
-     * Wall-clock reference for the 1-second timer tick.
-     * esp_timer_get_time() returns monotonic microseconds since boot;
-     * it is not affected by SNTP or settimeofday().
+     * Wall-clock baseline for the 1-second timer tick.                  PORT-E
+     * esp_timer_get_time() is monotonic and unaffected by SNTP/settimeofday.
      */
     int64_t last_timer_us = esp_timer_get_time();
 
-    ESP_LOGI(TAG, "TFTPDT started, opening listen socket on port %u",
+    ESP_LOGI(TAG, "TFTPDT started — opening listen socket on port %u",
              (unsigned)g_tftpd_cfg.port);
 
     if (tftpd_open_listen(g_tftpd_cfg.port) < 0) {
@@ -150,8 +165,12 @@ static void tftpd_main_task(void *param)
         }
 
         if (maxfd < 0) {
-            /* No open sockets — back-off, run the timer, try to reopen */
-            ESP_LOGW(TAG, "No open sockets; retrying listen open in 1 s");
+            /*
+             * No open sockets — delayed retry.
+             * Still run the timer so DALLY sessions from a previous pass
+             * get cleaned up even if the listen socket disappeared.
+             */
+            ESP_LOGW(TAG, "No open sockets; retrying in 1 s");
             vTaskDelay(pdMS_TO_TICKS(1000));
             tftpd_handle_timer();
             last_timer_us = esp_timer_get_time();
@@ -161,14 +180,13 @@ static void tftpd_main_task(void *param)
         }
 
         /*
-         * Cap the select() timeout at the remaining time until the next
-         * 1-second timer tick so we never overshoot by more than one
-         * scheduler quantum.
+         * Cap select() timeout to the time remaining until the next 1-second
+         * tick, so we never overshoot by more than one scheduler quantum.
          */
         {
             int64_t now_us    = esp_timer_get_time();
             int64_t remain_us = 1000000LL - (now_us - last_timer_us);
-            if (remain_us <= 0) remain_us = 1;   /* don't block if overdue */
+            if (remain_us <= 0) remain_us = 1;
             tv.tv_sec  = (long)(remain_us / 1000000LL);
             tv.tv_usec = (long)(remain_us % 1000000LL);
         }
@@ -178,12 +196,11 @@ static void tftpd_main_task(void *param)
         /*
          * ── Wall-clock 1-second timer tick ──────────────────────────────
          *
-         * FIX: call tftpd_handle_timer() based on elapsed real time, NOT
-         * only when select() returns 0.  When packets arrive continuously
-         * (active WRQ, client retransmitting in DALLY, etc.) select() never
-         * times out, so the old code starved the timer: DALLY never expired,
-         * g_tftpd_num_write stayed at 1, and new sessions were blocked until
-         * the client's own timeout (potentially 9 s) caused it to give up.
+         * Check elapsed time after every select() return, not only on
+         * timeout.  During an active WRQ the client sends DATA packets
+         * continuously and select() never times out — checking only on
+         * timeout would starve the DALLY countdown and leave
+         * g_tftpd_num_write permanently at 1.
          */
         {
             int64_t now_us = esp_timer_get_time();
@@ -194,7 +211,7 @@ static void tftpd_main_task(void *param)
         }
 
         if (nready < 0) {
-            if (errno != EINTR)   /* EINTR is benign; all others are real */
+            if (errno != EINTR)
                 ESP_LOGE(TAG, "select() error: %s", strerror(errno));
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
