@@ -63,7 +63,8 @@ dkms.conf
 /*.hex
 /*.bin
 /.clangd/
-.clangd/
+/clangd/
+.cache/
 
 # IDE files (examples)
 *.vscode/
